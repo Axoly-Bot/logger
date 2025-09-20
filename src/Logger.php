@@ -2,6 +2,8 @@
 
 namespace Axoly\Logger;
 
+use Axoly\Logger\LoggerFile\Write;
+use Axoly\Storage\Storage;
 use Carbon\Carbon;
 use Psr\Log\LoggerInterface;
 
@@ -15,12 +17,34 @@ final class Logger implements LoggerInterface {
      */
     private $name;
 
-    private function __construct(string $name) {
+    /**
+     * Storage instance for file logging
+     * @var Storage
+     */
+    private $storage;
+
+    /**
+     * Shard ID for distributed logging (if applicable)
+     * @var 
+     */
+    private $shardID;
+
+    private function __construct(
+        string $name, 
+        Storage $storage,
+        int $shardID = 0
+    ){ 
         $this->name = $name;
+        $this->storage = $storage;
+        $this->shardID = $shardID;
     }
 
-    public static function new(string $name = 'PHP'){
-        return new self($name);
+    public static function new(
+        string $name = 'PHP', 
+        Storage $storage,
+        int $shardID = 0
+    ){
+        return new self($name, $storage);
     }
     public function log($level, $message, array $context = []): void
     {
@@ -29,6 +53,8 @@ final class Logger implements LoggerInterface {
         }
         if($level == Level::DEBUG) return;
         
+        Write::toFile($this->storage, $this->name . ' S.' . $this->shardID, $message, $context);
+
         $date = Carbon::now()->format('H:i:s A s.u');
 
         $style = Level::levelStyles[$level] ?? 'bg-gray-600 text-white';

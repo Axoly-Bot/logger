@@ -1,13 +1,18 @@
 <?php declare(strict_types=1);
 
 use Axoly\Logger\Logger;
+use Axoly\Storage\Storage;
+use React\EventLoop\Loop;
 
 final class LoggerTest extends \PHPUnit\Framework\TestCase {
     private Logger $logger;
 
     protected function setUp(): void
     {
-        $this->logger = Logger::new();
+        $this->logger = Logger::new(
+            "TestLogger", 
+            Storage::create( Loop::get(), __DIR__  ) 
+        );
     }
 
     public function testLogWithValidLevel(): void
